@@ -14,5 +14,7 @@ starlette==0.46.2
 typing-inspection==0.4.1
 typing_extensions==4.13.2
 uvicorn==0.34.2
+python-dotenv
+# To install the required packages, run the following command:
 
 # pip install -r requirements.txt

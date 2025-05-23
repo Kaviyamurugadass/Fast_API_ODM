@@ -6,11 +6,13 @@ from pymongo.errors import ConnectionFailure
 from typing import Optional
 import time
 from datetime import datetime
+from dotenv import load_dotenv
+import os 
 
 app = FastAPI()
 
-# MongoDB connection configuration
-MONGODB_URI = "mongodb+srv://kaviyamurugadass:a5Pqbm8e5Q2Uji6O@cluster0.o4u2ivu.mongodb.net/TaskManager?retryWrites=true&w=majority"
+load_dotenv()
+MONGODB_URI = os.getenv("MONGODB_URI")
 
 try:
     # Configure MongoDB client with longer timeouts and retryWrites
