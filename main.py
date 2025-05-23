@@ -1,0 +1,58 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from pymongo import MongoClient
+from bson import ObjectId
+from pymongo.errors import ConnectionFailure
+
+app = FastAPI()
+
+# MongoDB connection configuration
+MONGODB_URI = "mongodb+srv://kaviyamurugadass:a5Pqbm8e5Q2Uji6O@cluster0.o4u2ivu.mongodb.net/TaskManager?retryWrites=true&w=majority&directConnection=false"
+
+try:
+    client = MongoClient(MONGODB_URI, 
+                        serverSelectionTimeoutMS=5000,
+                        connect=True)
+    # Test the connection
+    client.admin.command('ping')
+    print("✅ MongoDB connection successful")
+    db = client["TaskManager"]
+    tasks_collection = db["Tasks"]
+except Exception as e:
+    print("❌ Failed to connect:", e)
+    raise
+
+# Pydantic model
+class Task(BaseModel):
+    task: str
+    done: bool = False
+
+@app.get("/")
+def home():
+    return {"message": "Task Manager API is running!"}
+    
+# Add a task
+@app.post("/tasks")
+async def create_task(task: Task):
+    try:
+        task_dict = task.dict()
+        result = tasks_collection.insert_one(task_dict)
+        return {"id": str(result.inserted_id), **task_dict}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Get all tasks
+@app.get("/tasks")
+async def get_tasks():
+    try:
+        tasks = []
+        cursor = tasks_collection.find()
+        for task in cursor:
+            tasks.append({
+                "id": str(task.get("_id")),
+                "task": task.get("task", "No title"),  # corrected field name
+                "done": task.get("done", False)
+            })
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
