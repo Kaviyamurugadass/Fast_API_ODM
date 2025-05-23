@@ -8,12 +8,18 @@ from typing import Optional
 app = FastAPI()
 
 # MongoDB connection configuration
-MONGODB_URI = "mongodb+srv://kaviyamurugadass:a5Pqbm8e5Q2Uji6O@cluster0.o4u2ivu.mongodb.net/TaskManager?retryWrites=true&w=majority&directConnection=false"
+MONGODB_URI = "mongodb+srv://kaviyamurugadass:a5Pqbm8e5Q2Uji6O@cluster0.o4u2ivu.mongodb.net/TaskManager?retryWrites=true&w=majority"
 
 try:
-    client = MongoClient(MONGODB_URI, 
-                        serverSelectionTimeoutMS=5000,
-                        connect=True)
+    # Configure MongoDB client with longer timeouts and retryWrites
+    client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=30000,  # Increased timeout
+        connectTimeoutMS=20000,
+        socketTimeoutMS=20000,
+        maxPoolSize=50,
+        retryWrites=True
+    )
     # Test the connection
     client.admin.command('ping')
     print("✅ MongoDB connection successful")
@@ -48,14 +54,23 @@ async def create_task(task: Task):
 
 # Get all tasks
 @app.get("/tasks")
-async def get_tasks():
+async def get_tasks(done: Optional[bool] = None, limit: Optional[int] = None):
     try:
+        # Build the filter
+        filter_query = {}
+        if done is not None:
+            filter_query["done"] = done
+
         tasks = []
-        cursor = tasks_collection.find()
+        # Apply filter and limit
+        cursor = tasks_collection.find(filter_query)
+        if limit:
+            cursor = cursor.limit(limit)
+
         for task in cursor:
             tasks.append({
                 "id": str(task.get("_id")),
-                "task": task.get("task", "No title"),  # corrected field name
+                "task": task.get("task", "No title"),
                 "done": task.get("done", False)
             })
         return tasks
