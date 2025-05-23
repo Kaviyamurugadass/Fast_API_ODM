@@ -56,3 +56,38 @@ async def get_tasks():
         return tasks
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# Delete task with Id
+@app.delete("/tasks/{task_id}")
+async def delete_task(task_id: str):
+    try:
+        result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
+        if result.deleted_count == 1:
+            return {"message": "Task deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Task not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# Update task with Id
+@app.put("/tasks/{task_id}")
+async def update_task(task_id: str, task: Task):
+    try:
+        # Update the task
+        result = tasks_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": task.dict()}
+        )
+        
+        if result.modified_count == 1:
+            # Fetch and return the updated task
+            updated_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+            if updated_task:
+                return {
+                    "id": str(updated_task["_id"]),
+                    "task": updated_task.get("task", "No title"),
+                    "done": updated_task.get("done", False)
+                }
+        raise HTTPException(status_code=404, detail="Task not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
