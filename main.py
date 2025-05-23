@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from pymongo import MongoClient
 from bson import ObjectId
 from pymongo.errors import ConnectionFailure
+from typing import Optional
 
 app = FastAPI()
 
@@ -26,6 +27,10 @@ except Exception as e:
 class Task(BaseModel):
     task: str
     done: bool = False
+
+class TaskUpdate(BaseModel):
+    task: Optional[str] = None
+    done: Optional[bool] = None
 
 @app.get("/")
 def home():
@@ -91,3 +96,27 @@ async def update_task(task_id: str, task: Task):
         raise HTTPException(status_code=404, detail="Task not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# Patch task with Id
+@app.patch("/tasks/{task_id}")
+async def patch_task(task_id: str, task: TaskUpdate):
+    try:
+        # Update the task
+        result = tasks_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": task.dict()}
+        )
+        
+        if result.modified_count == 1:
+            # Fetch and return the updated task 
+            updated_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+            if updated_task:
+                return {
+                    "id": str(updated_task["_id"]),
+                    "task": updated_task.get("task", "No title"),
+                    "done": updated_task.get("done", False) 
+                }
+        raise HTTPException(status_code=404, detail="Task not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
