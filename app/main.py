@@ -4,12 +4,15 @@ from app.models import User
 from typing import List
 from beanie import PydanticObjectId
 
+# Creates the FastAPI application instance
 app = FastAPI(title="FastAPI with Beanie ODM")
 
+# Startup event - runs when the application starts
 @app.on_event("startup")
 async def start_db():
-    await init_db()
+    await init_db() # Initializes database connection
 
+# Root endpoint - what you see at http://127.0.0.1:8000/
 @app.get("/")
 async def root():
     return {
@@ -26,6 +29,7 @@ async def root():
         }
     }
 
+# CRUD endpoints for User management
 @app.post("/users/", response_model=User)
 async def create_user(user: User):
     try:
