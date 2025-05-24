@@ -11,7 +11,10 @@ load_dotenv()
 
 # Database configuration
 DATABASE_URL = os.getenv("MONGODB_URI")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "fastapi_odm_beanie")
+
+if not DATABASE_URL:
+    raise ValueError("MONGODB_URI environment variable is not set")
 
 async def init_db():
     """Initialize database connection"""
