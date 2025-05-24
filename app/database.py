@@ -10,17 +10,22 @@ from fastapi import HTTPException
 load_dotenv()
 
 # Database configuration
-DATABASE_URL = "mongodb+srv://kaviyamurugadass:a5Pqbm8e5Q2Uji6O@cluster0.o4u2ivu.mongodb.net/fastapi_odm_beanie?retryWrites=true&w=majority&directConnection=false"
-DATABASE_NAME = "fastapi_odm_beanie"
+DATABASE_URL = os.getenv("MONGODB_URI")
+DATABASE_NAME = os.getenv("DATABASE_NAME")
 
 async def init_db():
     """Initialize database connection"""
     try:
-        # Set a shorter timeout for faster feedback
+        # Set longer timeouts and proper MongoDB Atlas settings
         client = AsyncIOMotorClient(
             DATABASE_URL,
-            serverSelectionTimeoutMS=5000,  # 5 second timeout
-            connectTimeoutMS=5000
+            serverSelectionTimeoutMS=30000,  # 30 second timeout
+            connectTimeoutMS=30000,
+            socketTimeoutMS=30000,
+            maxPoolSize=10,
+            minPoolSize=1,
+            retryWrites=True,
+            ssl=True
         )
         
         # Test the connection
