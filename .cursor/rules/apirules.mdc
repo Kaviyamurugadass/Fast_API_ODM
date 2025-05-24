@@ -1,0 +1,10 @@
+---
+description: Ib the API project folloe these rules
+globs: 
+alwaysApply: false
+---
+# RULES:
+# 1. After installing any new package, update this file using: pip freeze > requirements.txt
+
+
+# 2. To install all packages from this file, run: pip install -r requirements.txt
